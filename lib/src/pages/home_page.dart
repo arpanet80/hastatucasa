@@ -1,5 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:hastatucasa/db.dart' as db;
+import 'package:hastatucasa/src/model/empresa.dart';
+import 'package:hastatucasa/src/widgets/empresa_list.dart';
+import 'package:hastatucasa/src/widgets/loading.dart';
+import 'package:hastatucasa/src/widgets/red_error.dart';
 
 class HomePage extends StatelessWidget {
   //const HomePage({Key key}) : super(key: key);
@@ -9,24 +13,23 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar( title: Text('Hasta tu Casa') ),
       body: StreamBuilder(
-          stream: Firestore.instance.collection('EMPRESA').snapshots(),
-          builder: (context, AsyncSnapshot<QuerySnapshot> snapshot){
-            if(!snapshot.hasData){
-              return Center(
-                child: CircularProgressIndicator()
-              );
+          stream: db.getEmpresas(),
+          builder: (context, AsyncSnapshot<List<Empresa>> snapshot){
+
+            if(snapshot.hasError) {
+              return RedError(snapshot.error);
             }
-            List<DocumentSnapshot> docs = snapshot.data.documents;
-            return ListView.builder(
-              itemCount: docs.length,
-              itemBuilder: (context, index){
-                return ListTile(
-                  title: Text(docs[index].data['nombre']),
-                );
-              }
-            );
+
+            if(!snapshot.hasData){
+              return Loading();
+            }
+
+            List<Empresa> empresas = snapshot.data;
+            return EmpresaList(empresas: empresas);
+
           },
         ),
     );
   }
 }
+
